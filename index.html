@@ -169,8 +169,8 @@
 
         $.each(ingredientCodeList, function (i, ingredientCode) {
             var ingredientReadableName = ingredientCode
-                .replace('_', ' ')
-                .replace(/\b(\w)/, function (firstLetter) {
+                .replace(/_+/g, ' ')
+                .replace(/\b(\w)/g, function (firstLetter) {
                     return firstLetter.toUpperCase();
                 });
 
