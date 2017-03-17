@@ -190,7 +190,7 @@
             addIngredientRow();
         });
 
-        $('.delete-row').click(function(){
+        $('body').on('click', '.delete-row', function(){
             $(this).closest('.ingredient-row').remove();
         });
 
