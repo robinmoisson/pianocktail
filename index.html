@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:image" content="http://robinmoisson.github.io/freediving/img/christine_freediving.jpg">
+    <title>Pianocktail 🐙</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<nav class="navbar navbar-static-top navbar-default">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/pianocktail">Pianocktail by 🐙</a>
+        </div>
+    </div>
+</nav>
+
+
+<div class="container">
+    <h1>Pianocktail by 🐙</h1>
+
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="form-group">
+                <label for="cocktail-name">Nom du cocktail</label>
+                <input id="cocktail-name" type="text" class="form-control">
+            </div>
+            <hr>
+            <div class="form-inline" id="ingredient-inputs"></div>
+            <button class="btn btn-default add-ingredient-row">+ d'alcool</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12 text-center">
+            <button class="btn btn-primary btn-lg generate-receipt">~*~ Générer ~*~</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12">
+            <h2>Recette</h2>
+            <pre id="generated-receipt">
+{
+    "name": "🐙"
+}</pre>
+        </div>
+    </div>
+</div>
+
+<script src="js/jquery-3.2.0.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+
+<script>
+    var ingredientCodeList = [
+        'angostura_bitters',
+        'anisette',
+        'apple_brandy',
+        'apple_juice',
+        'apricot_brandy',
+        'aquavit',
+        'benedictine',
+        'blackberry_brandy',
+        'bourbon',
+        'brandy',
+        'campari',
+        'champagne',
+        'cherry_brandy',
+        'chocolate_orange_liqueur',
+        'club_soda',
+        'coffee',
+        'coffee_liqueur',
+        'cola',
+        'cranberry_juice',
+        'cream',
+        'cream_of_coconut',
+        'creme_de_banane',
+        'creme_de_cassis',
+        'creme_de_noyaux',
+        'creme_de_violette',
+        'curacao',
+        'dark_creme_de_cacao',
+        'dark_rum',
+        'dry_sherry',
+        'dry_vermouth',
+        'dubonnet',
+        'galliano',
+        'gin',
+        'ginger_ale',
+        'gold_rum',
+        'grape_juice',
+        'grapefruit_juice',
+        'green_chartreuse',
+        'green_creme_de_menthe',
+        'grenadine',
+        'guava_juice',
+        'irish_cream',
+        'kummel',
+        'lemon_juice',
+        'lemonade',
+        'light_rum',
+        'lillet_blanc',
+        'lime_juice',
+        'limeade',
+        'maraschino_liqueur',
+        'melon_liqueur',
+        'milk',
+        'orange_bitters',
+        'orange_cognac',
+        'orange_juice',
+        'orgeat_syrup',
+        'passion_fruit_juice',
+        'peach_brandy',
+        'peanut_liqueur',
+        'peppermint_schnapps',
+        'pernod',
+        'pineapple_juice',
+        'plum_brandy',
+        'port_wine',
+        'raspberry_liqueur',
+        'raspberry_syrup',
+        'sambuca',
+        'sloe_gin',
+        'sour_mix',
+        'southern_comfort',
+        'sugar_syrup',
+        'swedish_punsch',
+        'sweet_vermouth',
+        'tabasco',
+        'tequila',
+        'tomato_juice',
+        'tonic_water',
+        'triple_sec',
+        'vanilla_extract',
+        'vodka',
+        'water',
+        'whisky',
+        'whisky_liqueur',
+        'white_creme_de_cacao',
+        'white_creme_de_menthe',
+        'white_wine',
+        'worcester_sauce'
+    ];
+
+    var ingredientRowTemplate =
+        '<div class="ingredient-row">' +
+            '<label class="hidden-xs control-label">Ingrédient</label>' +
+            '<div class="row">' +
+                '<div class="col-xs-12">' +
+                    '<select class="form-control ingredient-code ingredient-input">' +
+                        '<option value>Ingrédient</option>' +
+                    '</select>' +
+                    '<div class="input-group ingredient-input">' +
+                        '<input class="form-control ingredient-quantity" placeholder="Quantité" type="number">' +
+                        '<span class="input-group-addon">mL</span>' +
+                    '</div>' +
+                    '<button class="delete-row btn btn-xs btn-danger add-ingredient" type="button">&times;</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+
+    function addIngredientRow() {
+        var ingredientRow = $($.parseHTML(ingredientRowTemplate));
+        var selectNode = ingredientRow.find('select');
+
+        $.each(ingredientCodeList, function (i, ingredientCode) {
+            var ingredientReadableName = ingredientCode
+                .replace('_', ' ')
+                .replace(/\b(\w)/, function (firstLetter) {
+                    return firstLetter.toUpperCase();
+                });
+
+            selectNode.append($('<option>', {
+                value: ingredientCode,
+                text: ingredientReadableName
+            }));
+        });
+
+        $('#ingredient-inputs').append(ingredientRow);
+    }
+
+    $(function () {
+        addIngredientRow();
+
+        $('.add-ingredient-row').click(function () {
+            addIngredientRow();
+        });
+
+        $('.delete-row').click(function(){
+            $(this).closest('.ingredient-row').remove();
+        });
+
+        $('#generate').click(function () {
+            $('#receipt-generator').submit();
+        });
+
+        $('.generate-receipt').click(function (e) {
+            var receipt = {
+                name: $('#cocktail-name').val(),
+                ingredients : {}
+            };
+
+            // add ingredients
+            $('.ingredient-row').each(function (i, ingredientRow) {
+                var row = $(ingredientRow);
+
+                var ingredientCode = row.find('.ingredient-code').val();
+                var quantity = row.find('.ingredient-quantity').val();
+                var unit = 'ml';
+
+                var isRowEmpty = !ingredientCode || !quantity;
+                if (isRowEmpty) {
+                    return;
+                }
+
+                receipt.ingredients[ingredientCode] = {
+                    ingredient: ingredientCode,
+                    quantity: quantity,
+                    unit: unit
+                };
+            });
+
+            $('#generated-receipt').html(JSON.stringify(receipt, null, 4));
+        });
+    });
+</script>
+</body>
+</html>
